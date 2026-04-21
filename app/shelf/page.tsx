@@ -27,6 +27,7 @@ export default async function ShelfPage() {
       description: true,
       color: true,
       status: true,
+      size: true,
       createdAt: true,
     },
   });

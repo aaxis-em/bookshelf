@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { title, description, color, status } = await req.json();
+  const { title, description, color, status, size } = await req.json();
 
   if (!title?.trim() || !description?.trim()) {
     return NextResponse.json(
@@ -38,6 +38,7 @@ export async function POST(req: Request) {
       description: description.trim(),
       color: color || null,
       status: status || null,
+      size: size || "medium",
       userId: session.user.id,
     },
   });

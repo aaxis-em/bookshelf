@@ -8,6 +8,7 @@ export interface Book {
   description: string;
   color?: string | null;
   status?: string | null;
+  size?: string | null;
   createdAt: string;
 }
 
@@ -40,6 +41,13 @@ const DEFAULT_COLOR = "#1a1614";
 const STATUS_DOT: Record<string, { color: string; label: string }> = {
   reading: { color: "#4ade80", label: "Currently Reading" },
   completed: { color: "#facc15", label: "Completed" },
+};
+
+// Size determines spine width and height
+const SIZE_DIMENSIONS: Record<string, { width: number; baseHeight: number }> = {
+  small:  { width: 48, baseHeight: 130 },
+  medium: { width: 64, baseHeight: 160 },
+  large:  { width: 80, baseHeight: 200 },
 };
 
 interface Props {
@@ -87,7 +95,6 @@ export default function BookCard({ book, index, onDelete, removing, selected, on
     }
   };
 
-  // Reset confirm state if user moves away
   useEffect(() => {
     if (!confirmDelete) return;
     const timer = setTimeout(() => setConfirmDelete(false), 3000);
@@ -100,7 +107,9 @@ export default function BookCard({ book, index, onDelete, removing, selected, on
     }
   };
 
-  const height = 160 + (index % 4) * 20;
+  const sizeKey = book.size || "medium";
+  const dims = SIZE_DIMENSIONS[sizeKey] || SIZE_DIMENSIONS.medium;
+  const height = dims.baseHeight + (index % 4) * 12;
   const titleColor = selected ? getContrastColor(baseColor) : getContrastColorMuted(baseColor);
   const statusInfo = book.status ? STATUS_DOT[book.status] : null;
 
@@ -108,7 +117,7 @@ export default function BookCard({ book, index, onDelete, removing, selected, on
     <div
       className={`book-spine ${removing ? "removing" : ""} ${selected ? "selected" : ""}`}
       style={{
-        width: "64px",
+        width: `${dims.width}px`,
         minHeight: `${height}px`,
         cursor: "pointer",
         position: "relative",
@@ -154,7 +163,7 @@ export default function BookCard({ book, index, onDelete, removing, selected, on
         <span
           className="font-mono text-center leading-tight block flex-1"
           style={{
-            fontSize: "9px",
+            fontSize: sizeKey === "small" ? "7px" : sizeKey === "large" ? "10px" : "9px",
             color: titleColor,
             letterSpacing: "0.04em",
             transform: "rotate(180deg)",

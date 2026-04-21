@@ -204,6 +204,7 @@ export default function PublicShelfView({ userName, userImage, books }: Props) {
                   <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: selectedBook.color, border: "1px solid var(--slate)" }} />
                 )}
                 <span className="font-mono text-xs" style={{ color: "var(--mist)", fontSize: "10px" }}>
+                  {selectedBook.size ? selectedBook.size.charAt(0).toUpperCase() + selectedBook.size.slice(1) : "Medium"} ·{" "}
                   Added {new Date(selectedBook.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                 </span>
               </div>

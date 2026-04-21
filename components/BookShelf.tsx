@@ -4,6 +4,25 @@ import { useState, useOptimistic, useTransition } from "react";
 import BookCard, { Book } from "./BookCard";
 import AddBookModal from "./AddBookModal";
 
+const COLOR_OPTIONS = [
+  { name: "Midnight", hex: "#1a1614" },
+  { name: "Crimson", hex: "#8B2500" },
+  { name: "Forest", hex: "#3E5641" },
+  { name: "Ocean", hex: "#1B3A4B" },
+  { name: "Plum", hex: "#6B3A5D" },
+  { name: "Walnut", hex: "#5C3317" },
+  { name: "Slate", hex: "#2C3E50" },
+  { name: "Amber", hex: "#8B6914" },
+  { name: "Sage", hex: "#3B5E3B" },
+  { name: "Indigo", hex: "#4A4063" },
+  { name: "Teal", hex: "#2F4F4F" },
+  { name: "Rust", hex: "#6B4226" },
+  { name: "Burgundy", hex: "#722F37" },
+  { name: "Navy", hex: "#1C2541" },
+  { name: "Olive", hex: "#556B2F" },
+  { name: "Charcoal", hex: "#36454F" },
+];
+
 interface Props {
   initialBooks: Book[];
   userId: string;
@@ -13,6 +32,12 @@ const STATUS_OPTIONS = [
   { value: "", label: "No Status", dot: "var(--slate)" },
   { value: "reading", label: "Currently Reading", dot: "#4ade80" },
   { value: "completed", label: "Completed", dot: "#facc15" },
+];
+
+const SIZE_OPTIONS = [
+  { value: "small", label: "S", desc: "Small" },
+  { value: "medium", label: "M", desc: "Medium" },
+  { value: "large", label: "L", desc: "Large" },
 ];
 
 export default function BookShelf({ initialBooks, userId }: Props) {
@@ -32,7 +57,7 @@ export default function BookShelf({ initialBooks, userId }: Props) {
     (state, newBook: Book) => [newBook, ...state]
   );
 
-  const handleAdd = async (data: { title: string; description: string; color?: string; status?: string }) => {
+  const handleAdd = async (data: { title: string; description: string; color?: string; status?: string; size?: string }) => {
     const tempId = `temp-${Date.now()}`;
     const tempBook: Book = {
       id: tempId,
@@ -40,6 +65,7 @@ export default function BookShelf({ initialBooks, userId }: Props) {
       description: data.description,
       color: data.color || null,
       status: data.status || null,
+      size: data.size || "medium",
       createdAt: new Date().toISOString(),
     };
 
@@ -114,6 +140,40 @@ export default function BookShelf({ initialBooks, userId }: Props) {
           prev.map((b) => (b.id === bookId ? { ...b, description: updated.description } : b))
         );
         setEditingDesc(false);
+      }
+    } catch {} finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateColor = async (bookId: string, color: string) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/books/${bookId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ color }),
+      });
+      if (res.ok) {
+        const updated: Book = await res.json();
+        setBooks((prev) => prev.map((b) => (b.id === bookId ? { ...b, color: updated.color } : b)));
+      }
+    } catch {} finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateSize = async (bookId: string, size: string) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/books/${bookId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ size }),
+      });
+      if (res.ok) {
+        const updated: Book = await res.json();
+        setBooks((prev) => prev.map((b) => (b.id === bookId ? { ...b, size: updated.size } : b)));
       }
     } catch {} finally {
       setSaving(false);
@@ -345,20 +405,61 @@ export default function BookShelf({ initialBooks, userId }: Props) {
                 </div>
               )}
 
+              {/* Change color */}
+              <div className="mt-3 flex flex-col gap-2">
+                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--mist)", fontSize: "9px" }}>Change Color:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {COLOR_OPTIONS.map((c) => (
+                    <button
+                      key={c.hex}
+                      title={c.name}
+                      onClick={() => handleUpdateColor(selectedBook.id, c.hex)}
+                      disabled={saving}
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        background: c.hex,
+                        border: (selectedBook.color || "#1a1614") === c.hex ? "2px solid var(--chalk)" : "2px solid transparent",
+                        cursor: "pointer",
+                        opacity: saving ? 0.5 : 1,
+                        transition: "all 0.2s ease",
+                      }}
+                      aria-label={`Change to ${c.name}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Change size */}
+              <div className="mt-3 flex flex-col gap-2">
+                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--mist)", fontSize: "9px" }}>Change Size:</span>
+                <div className="flex gap-2">
+                  {SIZE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleUpdateSize(selectedBook.id, opt.value)}
+                      disabled={saving}
+                      className="font-mono px-3 py-1 transition-all duration-200"
+                      style={{
+                        fontSize: "9px",
+                        border: `1px solid ${(selectedBook.size || "medium") === opt.value ? "var(--ghost)" : "var(--slate)"}`,
+                        background: (selectedBook.size || "medium") === opt.value ? "rgba(255,255,255,0.05)" : "transparent",
+                        color: (selectedBook.size || "medium") === opt.value ? "var(--ghost)" : "var(--mist)",
+                        opacity: saving ? 0.5 : 1,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Footer */}
               <div className="mt-3 flex items-center gap-3">
-                {selectedBook.color && (
-                  <div
-                    style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "50%",
-                      background: selectedBook.color,
-                      border: "1px solid var(--slate)",
-                    }}
-                  />
-                )}
                 <span className="font-mono text-xs" style={{ color: "var(--mist)", fontSize: "10px" }}>
+                  {selectedBook.size ? selectedBook.size.charAt(0).toUpperCase() + selectedBook.size.slice(1) : "Medium"} ·{" "}
                   {new Date(selectedBook.createdAt).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",

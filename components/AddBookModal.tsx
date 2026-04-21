@@ -27,8 +27,14 @@ const STATUS_OPTIONS = [
   { value: "completed", label: "Completed", dot: "#facc15" },
 ];
 
+const SIZE_OPTIONS = [
+  { value: "small", label: "S", desc: "Small", width: 16, height: 40 },
+  { value: "medium", label: "M", desc: "Medium", width: 22, height: 55 },
+  { value: "large", label: "L", desc: "Large", width: 28, height: 70 },
+];
+
 interface Props {
-  onAdd: (book: { title: string; description: string; color?: string; status?: string }) => Promise<void>;
+  onAdd: (book: { title: string; description: string; color?: string; status?: string; size?: string }) => Promise<void>;
   onClose: () => void;
 }
 
@@ -37,6 +43,7 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
   const [description, setDescription] = useState("");
   const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0].hex);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedSize, setSelectedSize] = useState("medium");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const titleRef = useRef<HTMLInputElement>(null);
@@ -65,6 +72,7 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
         description,
         color: selectedColor,
         status: selectedStatus || undefined,
+        size: selectedSize,
       });
       onClose();
     } catch {
@@ -208,36 +216,63 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
                 />
               ))}
             </div>
-            {/* Preview spine */}
-            <div className="flex items-center gap-3 mt-1">
-              <div style={{ position: "relative", width: "24px", height: "60px" }}>
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    background: `linear-gradient(to right, ${selectedColor} 0%, ${selectedColor}cc 40%, ${selectedColor} 100%)`,
-                    boxShadow: "2px 0 6px rgba(0,0,0,0.5)",
-                    borderRight: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                />
-                {/* Status dot preview on spine */}
-                {selectedStatus && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "4px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      width: "5px",
-                      height: "5px",
-                      borderRadius: "50%",
-                      background: STATUS_OPTIONS.find((s) => s.value === selectedStatus)?.dot || "transparent",
-                      boxShadow: `0 0 4px ${STATUS_OPTIONS.find((s) => s.value === selectedStatus)?.dot || "transparent"}80`,
-                    }}
-                  />
-                )}
+            {/* Book Size */}
+            <div className="flex flex-col gap-2 mt-2">
+              <label className="font-mono text-xs tracking-widest uppercase" style={{ color: "var(--mist)" }}>
+                Book Size
+              </label>
+              <div className="flex items-end gap-3">
+                {SIZE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSelectedSize(opt.value)}
+                    className="flex flex-col items-center gap-1 transition-all duration-200"
+                    title={opt.desc}
+                  >
+                    {/* Mini spine preview */}
+                    <div
+                      style={{
+                        width: `${opt.width}px`,
+                        height: `${opt.height}px`,
+                        background: `linear-gradient(to right, ${selectedColor} 0%, ${selectedColor}cc 40%, ${selectedColor} 100%)`,
+                        boxShadow: selectedSize === opt.value
+                          ? `2px 0 8px rgba(0,0,0,0.5), 0 0 0 2px var(--chalk)`
+                          : "2px 0 6px rgba(0,0,0,0.3)",
+                        borderRight: "1px solid rgba(255,255,255,0.06)",
+                        opacity: selectedSize === opt.value ? 1 : 0.5,
+                        transition: "all 0.2s ease",
+                        position: "relative",
+                      }}
+                    >
+                      {selectedStatus && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "3px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            width: "4px",
+                            height: "4px",
+                            borderRadius: "50%",
+                            background: STATUS_OPTIONS.find((s) => s.value === selectedStatus)?.dot || "transparent",
+                          }}
+                        />
+                      )}
+                    </div>
+                    <span
+                      className="font-mono"
+                      style={{
+                        fontSize: "9px",
+                        color: selectedSize === opt.value ? "var(--ghost)" : "var(--mist)",
+                        fontWeight: selectedSize === opt.value ? 600 : 400,
+                      }}
+                    >
+                      {opt.desc}
+                    </span>
+                  </button>
+                ))}
               </div>
-              <span className="font-mono text-xs" style={{ color: "var(--mist)" }}>Preview</span>
             </div>
           </div>
 

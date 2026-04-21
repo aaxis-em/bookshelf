@@ -63,6 +63,7 @@ model Book {
   description String   @db.Text
   color       String?
   status      String?
+  size        String?
   userId      String
   createdAt   DateTime @default(now())
 

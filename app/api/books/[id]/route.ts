@@ -59,6 +59,12 @@ export async function PATCH(
   if (typeof body.status === "string" || body.status === null) {
     updateData.status = body.status;
   }
+  if (typeof body.color === "string") {
+    updateData.color = body.color;
+  }
+  if (typeof body.size === "string") {
+    updateData.size = body.size;
+  }
 
   const updated = await prisma.book.update({
     where: { id: params.id },
