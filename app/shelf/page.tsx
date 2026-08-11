@@ -7,8 +7,9 @@ import BookShelf from "@/components/BookShelf";
 import { Book } from "@/components/BookCard";
 
 export const metadata = {
-  title: "Your Shelf — The Shelf",
+  title: "Your Shelf",
   description: "Your personal bookshelf collection.",
+  robots: { index: false, follow: false },
 };
 
 export default async function ShelfPage() {

@@ -13,14 +13,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     select: { name: true },
   });
 
-  if (!user) return { title: "Not Found — The Shelf" };
+  if (!user) return { title: "Not Found" };
+
+  const firstName = user.name?.split(" ")[0] ?? "A reader";
 
   return {
-    title: `${user.name?.split(" ")[0]}'s Shelf — The Shelf`,
-    description: `Check out ${user.name?.split(" ")[0]}'s book collection on The Shelf.`,
+    title: `${firstName}'s Shelf`,
+    description: `Check out ${firstName}'s book collection on The Shelf.`,
+    alternates: {
+      canonical: `/shelf/${params.userId}`,
+    },
     openGraph: {
-      title: `${user.name?.split(" ")[0]}'s Shelf`,
-      description: `See what ${user.name?.split(" ")[0]} is reading on The Shelf.`,
+      title: `${firstName}'s Shelf`,
+      description: `See what ${firstName} is reading on The Shelf.`,
+      type: "profile",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${firstName}'s Shelf`,
+      description: `See what ${firstName} is reading on The Shelf.`,
     },
   };
 }
