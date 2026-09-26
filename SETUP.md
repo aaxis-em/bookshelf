@@ -1,6 +1,6 @@
 # The Shelf — Setup Guide
 
-A dark, atmospheric online bookshelf inspired by Rusty Lake.
+A clean, bookish online bookshelf with 3D book spines, inspired by [adammaj.com/reading](https://adammaj.com/reading).
 Built with Next.js 14 · TypeScript · Tailwind CSS · NextAuth.js · Prisma · PostgreSQL.
 
 ---
@@ -78,6 +78,14 @@ Generate the client and push the schema to your database:
 npx prisma generate
 npx prisma db push
 ```
+
+Book covers are looked up on [Open Library](https://openlibrary.org) by title when a book is added. To fetch covers for books added before this existed, run once:
+
+```bash
+npx tsx --env-file=.env.local scripts/backfill-covers.ts
+```
+
+Add `--refresh` to re-check every book (this overwrites covers picked by hand via **Change cover**).
 
 > For production, use `npx prisma migrate deploy` after creating a migration with `npx prisma migrate dev --name init`.
 
@@ -183,7 +191,7 @@ model Book {
 
 ## Features
 
-- 🌑 Dark atmospheric UI inspired by Rusty Lake
+- 📚 3D book spines that swing open to show the cover (light & dark themes)
 - 📚 Personal bookshelf with per-user book storage
 - ✨ Optimistic UI updates (instant feedback)
 - 🖱️ Parallax shelf on landing page

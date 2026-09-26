@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BookShelf from "@/components/BookShelf";
-import { Book } from "@/components/BookCard";
+import type { Book } from "@/lib/books";
 
 export const metadata = {
   title: "Your Shelf",
@@ -29,6 +29,8 @@ export default async function ShelfPage() {
       color: true,
       status: true,
       size: true,
+      coverUrl: true,
+      author: true,
       createdAt: true,
     },
   });
@@ -39,31 +41,23 @@ export default async function ShelfPage() {
   }));
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--void)" }}>
+    <>
       <Navbar />
 
-      <main className="pt-24 pb-16 px-6 max-w-5xl mx-auto">
+      <main className="mx-auto max-w-3xl px-4 pb-40 pt-24">
         {/* Page header */}
-        <div className="mb-12 animate-fade-in">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="h-px w-8" style={{ background: "linear-gradient(to right, transparent, var(--slate))" }} />
-            <span className="font-mono text-xs tracking-[0.25em] uppercase" style={{ color: "var(--mist)" }}>
-              Personal Collection
-            </span>
-          </div>
-          <h1 className="font-mono text-3xl tracking-wide flicker" style={{ color: "var(--ghost)" }}>
+        <header className="mb-10 animate-fade-in">
+          <h1 className="text-3xl font-bold">
             {session.user.name?.split(" ")[0]}&apos;s Shelf
           </h1>
-          <p className="font-serif italic text-sm mt-1" style={{ color: "var(--mist)" }}>
-            Every book holds a memory.
-          </p>
-        </div>
+          <p className="mt-1 text-muted">Every book holds a memory.</p>
+        </header>
 
         {/* Shelf */}
         <div className="animate-fade-in" style={{ animationDelay: "0.2s", animationFillMode: "both" }}>
           <BookShelf initialBooks={books} userId={session.user.id} />
         </div>
       </main>
-    </div>
+    </>
   );
 }

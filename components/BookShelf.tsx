@@ -1,52 +1,21 @@
 "use client";
 
 import { useState, useOptimistic, useTransition } from "react";
-import BookCard, { Book } from "./BookCard";
-import AddBookModal from "./AddBookModal";
-
-const COLOR_OPTIONS = [
-  { name: "Midnight", hex: "#1a1614" },
-  { name: "Crimson", hex: "#8B2500" },
-  { name: "Forest", hex: "#3E5641" },
-  { name: "Ocean", hex: "#1B3A4B" },
-  { name: "Plum", hex: "#6B3A5D" },
-  { name: "Walnut", hex: "#5C3317" },
-  { name: "Slate", hex: "#2C3E50" },
-  { name: "Amber", hex: "#8B6914" },
-  { name: "Sage", hex: "#3B5E3B" },
-  { name: "Indigo", hex: "#4A4063" },
-  { name: "Teal", hex: "#2F4F4F" },
-  { name: "Rust", hex: "#6B4226" },
-  { name: "Burgundy", hex: "#722F37" },
-  { name: "Navy", hex: "#1C2541" },
-  { name: "Olive", hex: "#556B2F" },
-  { name: "Charcoal", hex: "#36454F" },
-];
+import AddBookModal, { NewBook } from "./AddBookModal";
+import BookDetails from "./BookDetails";
+import ShelfRows from "./ShelfRows";
+import { Book, STATUS_OPTIONS } from "@/lib/books";
 
 interface Props {
   initialBooks: Book[];
   userId: string;
 }
 
-const STATUS_OPTIONS = [
-  { value: "", label: "No Status", dot: "var(--slate)" },
-  { value: "reading", label: "Currently Reading", dot: "#4ade80" },
-  { value: "completed", label: "Completed", dot: "#facc15" },
-];
-
-const SIZE_OPTIONS = [
-  { value: "small", label: "S", desc: "Small" },
-  { value: "medium", label: "M", desc: "Medium" },
-  { value: "large", label: "L", desc: "Large" },
-];
-
 export default function BookShelf({ initialBooks, userId }: Props) {
   const [books, setBooks] = useState<Book[]>(initialBooks);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  const [editingDesc, setEditingDesc] = useState(false);
-  const [editDesc, setEditDesc] = useState("");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [, startTransition] = useTransition();
@@ -57,7 +26,7 @@ export default function BookShelf({ initialBooks, userId }: Props) {
     (state, newBook: Book) => [newBook, ...state]
   );
 
-  const handleAdd = async (data: { title: string; description: string; color?: string; status?: string; size?: string }) => {
+  const handleAdd = async (data: NewBook) => {
     const tempId = `temp-${Date.now()}`;
     const tempBook: Book = {
       id: tempId,
@@ -66,6 +35,8 @@ export default function BookShelf({ initialBooks, userId }: Props) {
       color: data.color || null,
       status: data.status || null,
       size: data.size || "medium",
+      coverUrl: data.coverUrl ?? null,
+      author: data.author || null,
       createdAt: new Date().toISOString(),
     };
 
@@ -126,24 +97,25 @@ export default function BookShelf({ initialBooks, userId }: Props) {
     }
   };
 
-  const handleSaveDescription = async (bookId: string) => {
+  const handleSaveDescription = async (bookId: string, description: string) => {
     setSaving(true);
     try {
       const res = await fetch(`/api/books/${bookId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: editDesc }),
+        body: JSON.stringify({ description }),
       });
       if (res.ok) {
         const updated: Book = await res.json();
         setBooks((prev) =>
           prev.map((b) => (b.id === bookId ? { ...b, description: updated.description } : b))
         );
-        setEditingDesc(false);
+        return true;
       }
     } catch {} finally {
       setSaving(false);
     }
+    return false;
   };
 
   const handleUpdateColor = async (bookId: string, color: string) => {
@@ -180,6 +152,25 @@ export default function BookShelf({ initialBooks, userId }: Props) {
     }
   };
 
+  const handleUpdateCover = async (bookId: string, coverUrl: string | null, author: string | null) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/books/${bookId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coverUrl, author }),
+      });
+      if (res.ok) {
+        const updated: Book = await res.json();
+        setBooks((prev) =>
+          prev.map((b) => (b.id === bookId ? { ...b, coverUrl: updated.coverUrl, author: updated.author } : b))
+        );
+      }
+    } catch {} finally {
+      setSaving(false);
+    }
+  };
+
   const handleShare = async () => {
     const url = `${window.location.origin}/shelf/${userId}`;
     try {
@@ -206,22 +197,26 @@ export default function BookShelf({ initialBooks, userId }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-12 pb-12">
+      <div className="flex flex-col gap-8">
         {/* Shelf header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1" style={{ width: "40px", background: "linear-gradient(to right, transparent, var(--slate))" }} />
-            <span className="font-mono text-xs tracking-[0.2em] uppercase" style={{ color: "var(--mist)" }}>
-              {displayBooks.length} {displayBooks.length === 1 ? "volume" : "volumes"}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+            <span>
+              {displayBooks.length} {displayBooks.length === 1 ? "book" : "books"}
             </span>
+            {/* Status legend */}
+            {STATUS_OPTIONS.filter((s) => s.value).map((s) => (
+              <span key={s.value} className="flex items-center gap-1.5 text-xs text-subtle">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.dot }} />
+                {s.label}
+              </span>
+            ))}
           </div>
-          <div className="flex items-center gap-3">
-            {/* Share button */}
+          <div className="flex items-center gap-2">
             <button
               id="share-shelf-btn"
               onClick={handleShare}
-              className="group flex items-center gap-2 font-mono text-xs tracking-widest uppercase transition-all duration-300"
-              style={{ color: copied ? "#4ade80" : "var(--mist)" }}
+              className="btn-outline"
               title="Copy public shelf link"
             >
               {copied ? (
@@ -229,11 +224,11 @@ export default function BookShelf({ initialBooks, userId }: Props) {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  Copied!
+                  Link copied
                 </>
               ) : (
                 <>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                     <polyline points="16 6 12 2 8 6" />
                     <line x1="12" y1="2" x2="12" y2="15" />
@@ -242,40 +237,13 @@ export default function BookShelf({ initialBooks, userId }: Props) {
                 </>
               )}
             </button>
-
-            <div className="w-px h-4" style={{ background: "var(--slate)" }} aria-hidden />
-
-            {/* Add book button */}
-            <button
-              id="add-book-btn"
-              onClick={() => setShowModal(true)}
-              className="group flex items-center gap-2 font-mono text-xs tracking-widest uppercase transition-all duration-300"
-              style={{ color: "var(--mist)" }}
-            >
-              <div
-                className="w-5 h-5 flex items-center justify-center border transition-colors duration-300"
-                style={{ borderColor: "var(--slate)", lineHeight: 1 }}
-              >
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <line x1="6" y1="2" x2="6" y2="10" />
-                  <line x1="2" y1="6" x2="10" y2="6" />
-                </svg>
-              </div>
-              Add Book
+            <button id="add-book-btn" onClick={() => setShowModal(true)} className="btn-outline">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <line x1="6" y1="2" x2="6" y2="10" />
+                <line x1="2" y1="6" x2="10" y2="6" />
+              </svg>
+              Add book
             </button>
-          </div>
-        </div>
-
-        {/* Status legend */}
-        <div className="flex items-center gap-5">
-          <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--slate)", fontSize: "9px" }}>Legend:</span>
-          <div className="flex items-center gap-1.5">
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
-            <span className="font-mono" style={{ fontSize: "9px", color: "var(--mist)" }}>Reading</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#facc15" }} />
-            <span className="font-mono" style={{ fontSize: "9px", color: "var(--mist)" }}>Completed</span>
           </div>
         </div>
 
@@ -283,192 +251,30 @@ export default function BookShelf({ initialBooks, userId }: Props) {
         {displayBooks.length === 0 ? (
           <EmptyState onAdd={() => setShowModal(true)} />
         ) : (
-          <div className="relative">
-            <ShelfRow
-              books={displayBooks}
-              removingIds={removingIds}
-              onDelete={handleDelete}
-              selectedBookId={selectedBookId}
-              onSelect={setSelectedBookId}
-            />
-          </div>
+          <ShelfRows
+            books={displayBooks}
+            selectedBookId={selectedBookId}
+            onSelect={setSelectedBookId}
+            removingIds={removingIds}
+          />
         )}
 
-        {/* Selected book description panel — below the shelf */}
+        {/* Selected book details — below the shelf */}
         {selectedBook && (
-          <div className="book-description-panel" style={{ marginTop: "-16px" }}>
-            <div
-              style={{
-                background: "var(--card-bg)",
-                border: `1px solid var(--card-border)`,
-                boxShadow: "var(--card-shadow)",
-                padding: "20px 24px",
-                maxWidth: "520px",
-              }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-mono text-sm tracking-widest uppercase" style={{ color: "var(--ghost)" }}>
-                  {selectedBook.title}
-                </h3>
-                <button
-                  onClick={() => { setSelectedBookId(null); setEditingDesc(false); }}
-                  className="font-mono text-xs hover:opacity-80 transition-opacity"
-                  style={{ color: "var(--mist)" }}
-                  aria-label="Close description"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="h-px mb-3" style={{ background: "var(--slate)" }} />
-
-              {/* Status selector */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--mist)", fontSize: "9px" }}>Status:</span>
-                <div className="flex items-center gap-1">
-                  {STATUS_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleUpdateStatus(selectedBook.id, opt.value || null)}
-                      disabled={saving}
-                      className="font-mono px-2 py-1 transition-all duration-200"
-                      style={{
-                        fontSize: "9px",
-                        border: `1px solid ${(selectedBook.status || "") === opt.value ? opt.dot : "var(--slate)"}`,
-                        background: (selectedBook.status || "") === opt.value ? `${opt.dot}15` : "transparent",
-                        color: (selectedBook.status || "") === opt.value ? opt.dot : "var(--mist)",
-                        opacity: saving ? 0.5 : 1,
-                      }}
-                    >
-                      <span className="flex items-center gap-1">
-                        <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: opt.dot, display: "inline-block" }} />
-                        {opt.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Description — editable */}
-              {editingDesc ? (
-                <div className="flex flex-col gap-2">
-                  <textarea
-                    value={editDesc}
-                    onChange={(e) => setEditDesc(e.target.value)}
-                    className="input-dark w-full px-3 py-2 font-serif italic text-sm resize-none"
-                    style={{ borderRadius: 0, minHeight: "80px" }}
-                    maxLength={600}
-                    disabled={saving}
-                  />
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs" style={{ color: "var(--mist)", fontSize: "9px" }}>{editDesc.length}/600</span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setEditingDesc(false)}
-                        className="font-mono text-xs px-3 py-1"
-                        style={{ color: "var(--mist)", fontSize: "10px" }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handleSaveDescription(selectedBook.id)}
-                        disabled={saving}
-                        className="font-mono text-xs px-3 py-1 border transition-all duration-200"
-                        style={{
-                          borderColor: "var(--slate)",
-                          color: "var(--ghost)",
-                          fontSize: "10px",
-                          opacity: saving ? 0.5 : 1,
-                        }}
-                      >
-                        {saving ? "Saving..." : "Save"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p className="font-serif italic text-sm leading-relaxed" style={{ color: "var(--silver)" }}>
-                    {selectedBook.description}
-                  </p>
-                  <button
-                    onClick={() => { setEditingDesc(true); setEditDesc(selectedBook.description); }}
-                    className="font-mono text-xs mt-2 transition-opacity hover:opacity-80"
-                    style={{ color: "var(--mist)", fontSize: "10px" }}
-                  >
-                    ✎ Edit notes
-                  </button>
-                </div>
-              )}
-
-              {/* Change color */}
-              <div className="mt-3 flex flex-col gap-2">
-                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--mist)", fontSize: "9px" }}>Change Color:</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {COLOR_OPTIONS.map((c) => (
-                    <button
-                      key={c.hex}
-                      title={c.name}
-                      onClick={() => handleUpdateColor(selectedBook.id, c.hex)}
-                      disabled={saving}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "50%",
-                        background: c.hex,
-                        border: (selectedBook.color || "#1a1614") === c.hex ? "2px solid var(--chalk)" : "2px solid transparent",
-                        cursor: "pointer",
-                        opacity: saving ? 0.5 : 1,
-                        transition: "all 0.2s ease",
-                      }}
-                      aria-label={`Change to ${c.name}`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Change size */}
-              <div className="mt-3 flex flex-col gap-2">
-                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--mist)", fontSize: "9px" }}>Change Size:</span>
-                <div className="flex gap-2">
-                  {SIZE_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleUpdateSize(selectedBook.id, opt.value)}
-                      disabled={saving}
-                      className="font-mono px-3 py-1 transition-all duration-200"
-                      style={{
-                        fontSize: "9px",
-                        border: `1px solid ${(selectedBook.size || "medium") === opt.value ? "var(--ghost)" : "var(--slate)"}`,
-                        background: (selectedBook.size || "medium") === opt.value ? "rgba(255,255,255,0.05)" : "transparent",
-                        color: (selectedBook.size || "medium") === opt.value ? "var(--ghost)" : "var(--mist)",
-                        opacity: saving ? 0.5 : 1,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="mt-3 flex items-center gap-3">
-                <span className="font-mono text-xs" style={{ color: "var(--mist)", fontSize: "10px" }}>
-                  {selectedBook.size ? selectedBook.size.charAt(0).toUpperCase() + selectedBook.size.slice(1) : "Medium"} ·{" "}
-                  {new Date(selectedBook.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
-          </div>
+          <BookDetails
+            key={selectedBook.id}
+            book={selectedBook}
+            onClose={() => setSelectedBookId(null)}
+            edit={{
+              saving,
+              onUpdateStatus: (status) => handleUpdateStatus(selectedBook.id, status),
+              onUpdateColor: (color) => handleUpdateColor(selectedBook.id, color),
+              onUpdateSize: (size) => handleUpdateSize(selectedBook.id, size),
+              onUpdateCover: (coverUrl, author) => handleUpdateCover(selectedBook.id, coverUrl, author),
+              onSaveDescription: (description) => handleSaveDescription(selectedBook.id, description),
+              onDelete: () => handleDelete(selectedBook.id),
+            }}
+          />
         )}
       </div>
 
@@ -480,98 +286,13 @@ export default function BookShelf({ initialBooks, userId }: Props) {
   );
 }
 
-function ShelfRow({
-  books,
-  removingIds,
-  onDelete,
-  selectedBookId,
-  onSelect,
-}: {
-  books: Book[];
-  removingIds: Set<string>;
-  onDelete: (id: string) => void;
-  selectedBookId: string | null;
-  onSelect: (id: string | null) => void;
-}) {
-  const ROW_SIZE = 10;
-  const rows: Book[][] = [];
-  for (let i = 0; i < books.length; i += ROW_SIZE) {
-    rows.push(books.slice(i, i + ROW_SIZE));
-  }
-
-  return (
-    <div className="flex flex-col gap-8">
-      {rows.map((row, rowIdx) => (
-        <div key={rowIdx} className="relative">
-          <div className="flex items-end gap-0 pb-0 overflow-x-auto" style={{ minHeight: "200px" }}>
-            {row.map((book, idx) => (
-              <BookCard
-                key={book.id}
-                book={book}
-                index={rowIdx * ROW_SIZE + idx}
-                onDelete={onDelete}
-                removing={removingIds.has(book.id)}
-                selected={selectedBookId === book.id}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-
-          <div
-            style={{
-              height: "10px",
-              background: "var(--shelf-plank)",
-              boxShadow: `0 4px 20px var(--shelf-shadow), 0 1px 0 rgba(255,255,255,0.04)`,
-            }}
-          />
-
-          <div
-            style={{
-              height: "20px",
-              background: "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)",
-            }}
-            aria-hidden
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 gap-6">
-      <div className="relative w-64">
-        <div
-          style={{
-            height: "8px",
-            background: "var(--shelf-plank)",
-            boxShadow: `0 4px 20px var(--shelf-shadow)`,
-            opacity: 0.6,
-          }}
-        />
-        <div
-          style={{
-            height: "16px",
-            background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)",
-          }}
-          aria-hidden
-        />
-      </div>
-
-      <div className="text-center flex flex-col items-center gap-3">
-        <p className="font-serif italic text-lg" style={{ color: "var(--mist)" }}>Your shelf is empty.</p>
-        <p className="font-mono text-xs tracking-widest" style={{ color: "var(--slate)" }}>
-          What stories inspire you?
-        </p>
-      </div>
-
-      <button
-        onClick={onAdd}
-        id="empty-add-book-btn"
-        className="font-mono text-xs tracking-[0.2em] uppercase border px-6 py-2 transition-all duration-300"
-        style={{ color: "var(--mist)", borderColor: "var(--slate)" }}
-      >
+    <div className="flex flex-col items-center gap-4 py-24 text-center">
+      <div className="mb-2 h-px w-48 bg-border" aria-hidden />
+      <p className="text-lg">Your shelf is empty.</p>
+      <p className="text-sm text-muted">What stories inspire you?</p>
+      <button onClick={onAdd} id="empty-add-book-btn" className="btn-outline mt-2">
         Add your first book
       </button>
     </div>

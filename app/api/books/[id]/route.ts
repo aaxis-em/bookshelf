@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { isOpenLibraryCover } from "@/lib/openLibrary";
 
 export async function DELETE(
   _req: Request,
@@ -64,6 +65,12 @@ export async function PATCH(
   }
   if (typeof body.size === "string") {
     updateData.size = body.size;
+  }
+  if (body.coverUrl === null || isOpenLibraryCover(body.coverUrl)) {
+    updateData.coverUrl = body.coverUrl;
+  }
+  if (typeof body.author === "string" || body.author === null) {
+    updateData.author = body.author?.trim().slice(0, 120) || null;
   }
 
   const updated = await prisma.book.update({

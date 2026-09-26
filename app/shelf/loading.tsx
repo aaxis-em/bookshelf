@@ -3,18 +3,17 @@ import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 export default function ShelfLoading() {
   return (
-    <div className="min-h-screen" style={{ background: "var(--void)" }}>
+    <>
       <Navbar />
-      <main className="pt-24 pb-16 px-6 max-w-5xl mx-auto">
+      <main className="mx-auto max-w-3xl px-4 pb-40 pt-24">
         {/* Header skeleton */}
-        <div className="mb-12">
-          <div className="skeleton h-3 w-32 mb-3" style={{ opacity: 0.4 }} />
-          <div className="skeleton h-8 w-48 mb-2" style={{ opacity: 0.3 }} />
-          <div className="skeleton h-4 w-36" style={{ opacity: 0.25 }} />
+        <div className="mb-10">
+          <div className="skeleton mb-3 h-8 w-48 rounded" />
+          <div className="skeleton h-4 w-40 rounded" />
         </div>
         {/* Shelf skeleton */}
         <LoadingSkeleton />
       </main>
-    </div>
+    </>
   );
 }
