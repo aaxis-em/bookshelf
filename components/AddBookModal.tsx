@@ -1,45 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import CoverPicker from "./CoverPicker";
+import { COLOR_OPTIONS, SIZE_OPTIONS, STATUS_OPTIONS, getBookDimensions } from "@/lib/books";
+import type { BookMatch } from "@/lib/openLibrary";
 
-const COLOR_OPTIONS = [
-  { name: "Midnight", hex: "#1a1614" },
-  { name: "Crimson", hex: "#8B2500" },
-  { name: "Forest", hex: "#3E5641" },
-  { name: "Ocean", hex: "#1B3A4B" },
-  { name: "Plum", hex: "#6B3A5D" },
-  { name: "Walnut", hex: "#5C3317" },
-  { name: "Slate", hex: "#2C3E50" },
-  { name: "Amber", hex: "#8B6914" },
-  { name: "Sage", hex: "#3B5E3B" },
-  { name: "Indigo", hex: "#4A4063" },
-  { name: "Teal", hex: "#2F4F4F" },
-  { name: "Rust", hex: "#6B4226" },
-  { name: "Burgundy", hex: "#722F37" },
-  { name: "Navy", hex: "#1C2541" },
-  { name: "Olive", hex: "#556B2F" },
-  { name: "Charcoal", hex: "#36454F" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "", label: "No Status", dot: "var(--slate)" },
-  { value: "reading", label: "Currently Reading", dot: "#4ade80" },
-  { value: "completed", label: "Completed", dot: "#facc15" },
-];
-
-const SIZE_OPTIONS = [
-  { value: "small", label: "S", desc: "Small", width: 16, height: 40 },
-  { value: "medium", label: "M", desc: "Medium", width: 22, height: 55 },
-  { value: "large", label: "L", desc: "Large", width: 28, height: 70 },
-];
+export interface NewBook {
+  title: string;
+  description: string;
+  author?: string;
+  color?: string;
+  status?: string;
+  size?: string;
+  // undefined = let the server pick automatically, null = no cover
+  coverUrl?: string | null;
+}
 
 interface Props {
-  onAdd: (book: { title: string; description: string; color?: string; status?: string; size?: string }) => Promise<void>;
+  onAdd: (book: NewBook) => Promise<void>;
   onClose: () => void;
 }
 
 export default function AddBookModal({ onAdd, onClose }: Props) {
   const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [pickedCover, setPickedCover] = useState<{ match: BookMatch | null } | null>(null);
   const [description, setDescription] = useState("");
   const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0].hex);
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -70,6 +55,8 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
       await onAdd({
         title,
         description,
+        author: author.trim() || pickedCover?.match?.author || undefined,
+        coverUrl: pickedCover ? pickedCover.match?.coverUrl ?? null : undefined,
         color: selectedColor,
         status: selectedStatus || undefined,
         size: selectedSize,
@@ -89,52 +76,31 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop"
-      style={{ background: "rgba(0,0,0,0.75)" }}
+      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       aria-label="Add a book"
     >
-      <div
-        className="relative w-full max-w-md mx-4 animate-slide-up overflow-y-auto"
-        style={{
-          background: "var(--modal-bg)",
-          border: `1px solid var(--modal-border)`,
-          boxShadow: "0 24px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.04)",
-          padding: "32px",
-          maxHeight: "90vh",
-        }}
-      >
+      <div className="relative mx-4 max-h-[90vh] w-full max-w-md animate-slide-up overflow-y-auto rounded-lg border border-border bg-bg p-6 shadow-lg sm:p-8">
         {/* Close button */}
-        <div className="absolute top-4 right-4">
-          <button
-            id="close-modal-btn"
-            onClick={onClose}
-            className="font-mono text-xs transition-colors duration-200"
-            style={{ color: "var(--mist)" }}
-            aria-label="Close modal"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
+        <button
+          id="close-modal-btn"
+          onClick={onClose}
+          className="absolute right-4 top-4 text-nav transition-colors hover:text-fg"
+          aria-label="Close modal"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
 
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-px flex-1" style={{ background: `linear-gradient(to right, transparent, var(--slate))` }} />
-            <span className="font-mono text-xs tracking-[0.2em] uppercase" style={{ color: "var(--mist)" }}>New Volume</span>
-            <div className="h-px flex-1" style={{ background: `linear-gradient(to left, transparent, var(--slate))` }} />
-          </div>
-          <h2 className="font-mono text-xl tracking-wider" style={{ color: "var(--ghost)" }}>Add a Book</h2>
-        </div>
+        <h2 className="mb-6 text-2xl font-bold">Add a book</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Title field */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="book-title-input" className="font-mono text-xs tracking-widest uppercase" style={{ color: "var(--mist)" }}>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="book-title-input" className="text-sm font-semibold">
               Title
             </label>
             <input
@@ -142,19 +108,53 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
               ref={titleRef}
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setPickedCover(null);
+              }}
               placeholder="The name of the book..."
               maxLength={120}
-              className="input-dark w-full px-4 py-3 font-mono text-sm"
-              style={{ borderRadius: 0 }}
+              className="input w-full px-3 py-2"
               disabled={loading}
             />
           </div>
 
+          {/* Author field */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="book-author-input" className="text-sm font-semibold">
+              Author <span className="font-normal text-subtle">(optional)</span>
+            </label>
+            <input
+              id="book-author-input"
+              type="text"
+              value={author}
+              onChange={(e) => {
+                setAuthor(e.target.value);
+                setPickedCover(null);
+              }}
+              placeholder="Helps find the right cover"
+              maxLength={120}
+              className="input w-full px-3 py-2"
+              disabled={loading}
+            />
+          </div>
+
+          {/* Cover picker */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold">Cover</span>
+            <CoverPicker
+              title={title}
+              author={author}
+              value={pickedCover ? pickedCover.match?.coverUrl ?? null : undefined}
+              onChange={(match) => setPickedCover({ match })}
+              color={selectedColor}
+            />
+          </div>
+
           {/* Description field */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="book-description-input" className="font-mono text-xs tracking-widest uppercase" style={{ color: "var(--mist)" }}>
-              Your Notes
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="book-description-input" className="text-sm font-semibold">
+              Your notes
             </label>
             <textarea
               id="book-description-input"
@@ -163,36 +163,25 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
               placeholder="What does this book mean to you..."
               rows={3}
               maxLength={600}
-              className="input-dark w-full px-4 py-3 font-serif italic text-sm resize-none"
-              style={{ borderRadius: 0 }}
+              className="input w-full resize-none px-3 py-2 leading-relaxed"
               disabled={loading}
             />
-            <span className="font-mono text-xs self-end" style={{ color: "var(--mist)" }}>{description.length}/600</span>
+            <span className="self-end text-xs text-subtle">{description.length}/600</span>
           </div>
 
           {/* Reading status */}
           <div className="flex flex-col gap-2">
-            <label className="font-mono text-xs tracking-widest uppercase" style={{ color: "var(--mist)" }}>
-              Reading Status
-            </label>
-            <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">Reading status</span>
+            <div className="flex flex-wrap items-center gap-2">
               {STATUS_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => setSelectedStatus(opt.value)}
-                  className="font-mono px-3 py-1.5 transition-all duration-200"
-                  style={{
-                    fontSize: "10px",
-                    border: `1px solid ${selectedStatus === opt.value ? opt.dot : "var(--slate)"}`,
-                    background: selectedStatus === opt.value ? `${opt.dot}15` : "transparent",
-                    color: selectedStatus === opt.value ? (opt.value ? opt.dot : "var(--chalk)") : "var(--mist)",
-                  }}
+                  className={`btn-outline px-2.5 py-1 text-xs ${selectedStatus === opt.value ? "border-subtle bg-hover" : "text-muted"}`}
                 >
-                  <span className="flex items-center gap-1.5">
-                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: opt.dot, display: "inline-block" }} />
-                    {opt.label}
-                  </span>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: opt.dot }} />
+                  {opt.label}
                 </button>
               ))}
             </div>
@@ -200,116 +189,87 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
 
           {/* Color picker */}
           <div className="flex flex-col gap-2">
-            <label className="font-mono text-xs tracking-widest uppercase" style={{ color: "var(--mist)" }}>
-              Spine Color
-            </label>
+            <span className="text-sm font-semibold">Spine color</span>
             <div className="flex flex-wrap gap-2">
               {COLOR_OPTIONS.map((color) => (
                 <button
                   key={color.hex}
                   type="button"
                   title={color.name}
-                  className={`color-swatch ${selectedColor === color.hex ? "active" : ""}`}
-                  style={{ background: color.hex }}
+                  className="h-6 w-6 rounded-full transition-transform hover:scale-110"
+                  style={{
+                    background: color.hex,
+                    outline: selectedColor === color.hex ? "2px solid var(--fg)" : "none",
+                    outlineOffset: "2px",
+                  }}
                   onClick={() => setSelectedColor(color.hex)}
                   aria-label={`Select ${color.name} color`}
+                  aria-pressed={selectedColor === color.hex}
                 />
               ))}
             </div>
-            {/* Book Size */}
-            <div className="flex flex-col gap-2 mt-2">
-              <label className="font-mono text-xs tracking-widest uppercase" style={{ color: "var(--mist)" }}>
-                Book Size
-              </label>
-              <div className="flex items-end gap-3">
-                {SIZE_OPTIONS.map((opt) => (
+          </div>
+
+          {/* Book size — mini spines at 1/4 scale */}
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-semibold">Book size</span>
+            <div className="flex items-end gap-4">
+              {SIZE_OPTIONS.map((opt) => {
+                const { spine, height } = getBookDimensions(opt.value);
+                const active = selectedSize === opt.value;
+                return (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => setSelectedSize(opt.value)}
-                    className="flex flex-col items-center gap-1 transition-all duration-200"
+                    className="flex flex-col items-center gap-1.5"
                     title={opt.desc}
+                    aria-pressed={active}
                   >
-                    {/* Mini spine preview */}
-                    <div
-                      style={{
-                        width: `${opt.width}px`,
-                        height: `${opt.height}px`,
-                        background: `linear-gradient(to right, ${selectedColor} 0%, ${selectedColor}cc 40%, ${selectedColor} 100%)`,
-                        boxShadow: selectedSize === opt.value
-                          ? `2px 0 8px rgba(0,0,0,0.5), 0 0 0 2px var(--chalk)`
-                          : "2px 0 6px rgba(0,0,0,0.3)",
-                        borderRight: "1px solid rgba(255,255,255,0.06)",
-                        opacity: selectedSize === opt.value ? 1 : 0.5,
-                        transition: "all 0.2s ease",
-                        position: "relative",
-                      }}
-                    >
-                      {selectedStatus && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "3px",
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            width: "4px",
-                            height: "4px",
-                            borderRadius: "50%",
-                            background: STATUS_OPTIONS.find((s) => s.value === selectedStatus)?.dot || "transparent",
-                          }}
-                        />
-                      )}
-                    </div>
                     <span
-                      className="font-mono"
+                      className="block transition-opacity"
                       style={{
-                        fontSize: "9px",
-                        color: selectedSize === opt.value ? "var(--ghost)" : "var(--mist)",
-                        fontWeight: selectedSize === opt.value ? 600 : 400,
+                        width: spine / 2,
+                        height: height / 4,
+                        background: selectedColor,
+                        opacity: active ? 1 : 0.4,
+                        outline: active ? "2px solid var(--fg)" : "none",
+                        outlineOffset: "2px",
                       }}
-                    >
-                      {opt.desc}
-                    </span>
+                    />
+                    <span className={`text-xs ${active ? "font-semibold text-fg" : "text-muted"}`}>{opt.desc}</span>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Error */}
-          {error && (
-            <p className="font-mono text-xs text-red-400 tracking-wide">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           {/* Submit */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex items-center gap-2 pt-2">
             <button
               type="submit"
               id="submit-book-btn"
               disabled={loading}
-              className="flex-1 font-mono text-sm tracking-[0.15em] uppercase py-3 border transition-all duration-300 disabled:opacity-40"
-              style={{
-                borderColor: "var(--slate)",
-                background: loading ? "transparent" : "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)",
-                color: "var(--ghost)",
-              }}
+              className="flex-1 rounded-md bg-fg px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
                   <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
-                  Placing...
+                  Adding...
                 </span>
               ) : (
-                "Place on Shelf"
+                "Add to shelf"
               )}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 font-mono text-xs transition-colors duration-200"
-              style={{ color: "var(--mist)" }}
+              className="px-4 py-2 text-sm text-muted transition-colors hover:text-fg"
             >
               Cancel
             </button>

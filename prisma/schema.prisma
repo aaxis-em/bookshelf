@@ -64,6 +64,8 @@ model Book {
   color       String?
   status      String?
   size        String?
+  coverUrl    String?
+  author      String?
   userId      String
   createdAt   DateTime @default(now())
 

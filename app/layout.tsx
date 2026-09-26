@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { DM_Sans, Lora } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/providers/SessionProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
+
+const lora = Lora({ subsets: ["latin"], display: "swap", variable: "--font-lora" });
+const dmSans = DM_Sans({ subsets: ["latin"], display: "swap", variable: "--font-dm-sans" });
 
 const title = "The Shelf — Your Personal Bookshelf";
 const description =
@@ -70,22 +74,14 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang="en" data-theme="light">
+    <html lang="en" data-theme="light" className={`${lora.variable} ${dmSans.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IM+Fell+English:ital@0;1&family=Inter:wght@300;400;500&display=swap"
-          rel="stylesheet"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="antialiased vignette">
-        {/* Noise grain overlay */}
-        <div className="noise-overlay" aria-hidden="true" />
+      <body className="antialiased">
         <SessionProvider session={session}>
           <ThemeProvider>{children}</ThemeProvider>
         </SessionProvider>

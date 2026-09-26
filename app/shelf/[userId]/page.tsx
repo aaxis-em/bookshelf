@@ -52,6 +52,8 @@ export default async function PublicShelfPage({ params }: PageProps) {
           color: true,
           status: true,
           size: true,
+          coverUrl: true,
+          author: true,
           createdAt: true,
         },
       },

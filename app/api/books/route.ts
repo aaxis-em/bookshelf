@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { findCoverUrl, isOpenLibraryCover } from "@/lib/openLibrary";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { title, description, color, status, size } = await req.json();
+  const { title, description, color, status, size, author, coverUrl } = await req.json();
 
   if (!title?.trim() || !description?.trim()) {
     return NextResponse.json(
@@ -32,6 +33,18 @@ export async function POST(req: Request) {
     );
   }
 
+  const cleanAuthor =
+    typeof author === "string" && author.trim() ? author.trim().slice(0, 120) : null;
+
+  // null = the user chose "No cover"; a picked Open Library URL is kept as-is;
+  // anything else falls back to an automatic lookup
+  const cover =
+    coverUrl === null
+      ? null
+      : isOpenLibraryCover(coverUrl)
+        ? coverUrl
+        : await findCoverUrl(title.trim(), cleanAuthor);
+
   const book = await prisma.book.create({
     data: {
       title: title.trim(),
@@ -39,6 +52,8 @@ export async function POST(req: Request) {
       color: color || null,
       status: status || null,
       size: size || "medium",
+      coverUrl: cover,
+      author: cleanAuthor,
       userId: session.user.id,
     },
   });

@@ -24,7 +24,7 @@ export default async function Image({ params }: { params: { userId: string } }) 
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f5f0e8",
+          background: "#ffffff",
           position: "relative",
         }}
       >
@@ -36,7 +36,7 @@ export default async function Image({ params }: { params: { userId: string } }) 
             left: 40,
             right: 40,
             bottom: 40,
-            border: "1px solid #b0a898",
+            border: "1px solid #e2e8f0",
           }}
         />
 
@@ -46,7 +46,7 @@ export default async function Image({ params }: { params: { userId: string } }) 
             fontSize: 22,
             letterSpacing: 6,
             textTransform: "uppercase",
-            color: "#6b6358",
+            color: "#666666",
           }}
         >
           The Shelf
@@ -56,7 +56,7 @@ export default async function Image({ params }: { params: { userId: string } }) 
           style={{
             display: "flex",
             fontSize: 96,
-            color: "#2c261e",
+            color: "#1a202c",
             marginTop: 24,
             letterSpacing: -2,
           }}
@@ -68,8 +68,7 @@ export default async function Image({ params }: { params: { userId: string } }) 
           style={{
             display: "flex",
             fontSize: 30,
-            color: "#6b6358",
-            fontStyle: "italic",
+            color: "#666666",
             marginTop: 16,
           }}
         >

@@ -1,70 +1,41 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import BookCover from "./BookCover";
+import { Book, DEFAULT_COLOR, getBookDimensions, getContrastColor, getStatus } from "@/lib/books";
 
-export interface Book {
-  id: string;
-  title: string;
-  description: string;
-  color?: string | null;
-  status?: string | null;
-  size?: string | null;
-  createdAt: string;
-}
-
-// Generates text color that contrasts with the background
-function getContrastColor(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? "rgba(20,15,10,0.8)" : "rgba(240,230,210,0.7)";
-}
-
-function getContrastColorMuted(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? "rgba(20,15,10,0.45)" : "rgba(180,170,150,0.45)";
-}
-
-function lighten(hex: string, amount: number): string {
-  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
-  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
-  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-}
-
-const DEFAULT_COLOR = "#1a1614";
-
-const STATUS_DOT: Record<string, { color: string; label: string }> = {
-  reading: { color: "#4ade80", label: "Currently Reading" },
-  completed: { color: "#facc15", label: "Completed" },
-};
-
-// Size determines spine width and height
-const SIZE_DIMENSIONS: Record<string, { width: number; baseHeight: number }> = {
-  small:  { width: 48, baseHeight: 130 },
-  medium: { width: 64, baseHeight: 160 },
-  large:  { width: 80, baseHeight: 200 },
-};
+// adammaj.com uses brightness(0.8) contrast(2) with grain at 0.4; softened here
+// so the darker spine palette keeps its hue instead of crushing to black.
+const FACE_FILTER = "brightness(0.95) contrast(1.25)";
+const GRAIN_OPACITY = 0.3;
+const TRANSITION = "500ms ease";
 
 interface Props {
   book: Book;
-  index: number;
-  onDelete?: (id: string) => void;
-  removing?: boolean;
   selected?: boolean;
   onSelect?: (id: string | null) => void;
-  readOnly?: boolean;
+  removing?: boolean;
 }
 
-export default function BookCard({ book, index, onDelete, removing, selected, onSelect, readOnly }: Props) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const baseColor = book.color || DEFAULT_COLOR;
-  const accentColor = lighten(baseColor, 20);
+// A book is two faces hinged at a shared edge: the spine faces the viewer, and
+// the cover sits almost edge-on. Opening swings the spine away and the cover out.
+export default function BookCard({ book, selected = false, onSelect, removing }: Props) {
+  const ref = useRef<HTMLDivElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const color = book.color || DEFAULT_COLOR;
+  const { spine, height, cover } = getBookDimensions(book.size);
+  const status = getStatus(book.status);
+  const label = book.author ? `${book.title} by ${book.author}` : book.title;
+
+  useEffect(() => {
+    if (!selected) return;
+    // Wait for the book to finish widening before bringing it into view
+    const timer = setTimeout(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [selected]);
 
   const playHoverSound = () => {
     try {
@@ -86,160 +57,85 @@ export default function BookCard({ book, index, onDelete, removing, selected, on
     } catch {}
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirmDelete) {
-      onDelete?.(book.id);
-    } else {
-      setConfirmDelete(true);
+  const toggle = () => onSelect?.(selected ? null : book.id);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggle();
     }
   };
-
-  useEffect(() => {
-    if (!confirmDelete) return;
-    const timer = setTimeout(() => setConfirmDelete(false), 3000);
-    return () => clearTimeout(timer);
-  }, [confirmDelete]);
-
-  const handleClick = () => {
-    if (onSelect) {
-      onSelect(selected ? null : book.id);
-    }
-  };
-
-  const sizeKey = book.size || "medium";
-  const dims = SIZE_DIMENSIONS[sizeKey] || SIZE_DIMENSIONS.medium;
-  const height = dims.baseHeight + (index % 4) * 12;
-  const titleColor = selected ? getContrastColor(baseColor) : getContrastColorMuted(baseColor);
-  const statusInfo = book.status ? STATUS_DOT[book.status] : null;
 
   return (
     <div
-      className={`book-spine ${removing ? "removing" : ""} ${selected ? "selected" : ""}`}
+      ref={ref}
+      role="button"
+      tabIndex={0}
+      aria-expanded={selected}
+      aria-label={label}
+      title={label}
+      className={`flex shrink-0 cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-subtle ${removing ? "book-removing" : ""}`}
       style={{
-        width: `${dims.width}px`,
-        minHeight: `${height}px`,
-        cursor: "pointer",
-        position: "relative",
-        animationDelay: `${index * 60}ms`,
-        animationFillMode: "both",
-        flex: "0 0 auto",
-        background: `linear-gradient(to right, ${baseColor} 0%, ${accentColor} 40%, ${baseColor} 100%)`,
-        transform: selected ? "translateY(-24px)" : undefined,
+        width: selected ? spine + cover : spine,
+        height,
+        perspective: "1000px",
+        transition: `width ${TRANSITION}`,
       }}
+      onClick={toggle}
+      onKeyDown={handleKeyDown}
       onMouseEnter={playHoverSound}
-      onClick={handleClick}
     >
-      {/* Status dot indicator — top of spine */}
-      {statusInfo && (
-        <div
-          className="absolute top-2 left-1/2 -translate-x-1/2 z-10"
-          title={statusInfo.label}
-          style={{ writingMode: "horizontal-tb" }}
-        >
-          <div
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: statusInfo.color,
-              boxShadow: `0 0 6px ${statusInfo.color}80`,
-              animation: book.status === "reading" ? "pulse 2s ease-in-out infinite" : undefined,
-            }}
-          />
-        </div>
-      )}
-
-      {/* Book content — vertical layout */}
+      {/* Spine */}
       <div
-        className="absolute inset-0 flex flex-col items-center justify-between py-3 px-1"
+        className="relative flex shrink-0 flex-col items-center justify-between overflow-hidden"
         style={{
-          writingMode: "vertical-rl",
-          textOrientation: "mixed",
-          paddingTop: statusInfo ? "14px" : "12px",
+          width: spine,
+          height,
+          backgroundColor: color,
+          color: getContrastColor(color),
+          filter: FACE_FILTER,
+          transformOrigin: "right",
+          transformStyle: "preserve-3d",
+          transform: `rotateY(${selected ? -60 : 0}deg)`,
+          transition: `transform ${TRANSITION}`,
         }}
       >
-        {/* Title */}
-        <span
-          className="font-mono text-center leading-tight block flex-1"
-          style={{
-            fontSize: sizeKey === "small" ? "7px" : sizeKey === "large" ? "10px" : "9px",
-            color: titleColor,
-            letterSpacing: "0.04em",
-            transform: "rotate(180deg)",
-            transition: "color 0.3s ease",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            maxHeight: "100%",
-          }}
+        <h2
+          className="mt-3 select-none overflow-hidden text-ellipsis whitespace-nowrap font-sans text-xs font-bold"
+          style={{ writingMode: "vertical-rl", maxHeight: height - (status ? 40 : 24) }}
         >
           {book.title}
-        </span>
-
-        {/* Selection indicator */}
-        <div
-          style={{
-            transform: "rotate(180deg)",
-            marginTop: "6px",
-            transition: "all 0.3s ease",
-          }}
-        >
-          <svg
-            width="8"
-            height="8"
-            viewBox="0 0 8 8"
-            fill="none"
+        </h2>
+        {status && (
+          <span
+            className="mb-3 h-1.5 w-1.5 shrink-0 rounded-full"
             style={{
-              opacity: selected ? 0.6 : 0.2,
-              transform: `rotate(${selected ? 90 : 0}deg)`,
-              transition: "transform 0.3s ease, opacity 0.3s ease",
-              color: getContrastColor(baseColor),
+              background: status.dot,
+              animation: book.status === "reading" ? "pulse 2s ease-in-out infinite" : undefined,
             }}
-          >
-            <path d="M2 1L6 4L2 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-        </div>
+            title={status.label}
+          />
+        )}
+        <span className="paper" style={{ opacity: GRAIN_OPACITY }} aria-hidden />
       </div>
 
-      {/* Spine highlight */}
+      {/* Cover */}
       <div
-        className="absolute top-0 left-0 bottom-0 pointer-events-none"
+        className="relative shrink-0 overflow-hidden"
         style={{
-          width: "1px",
-          background: `linear-gradient(to bottom, var(--spine-highlight) 0%, transparent 100%)`,
+          width: cover,
+          height,
+          filter: FACE_FILTER,
+          transformOrigin: "left",
+          transformStyle: "preserve-3d",
+          transform: `rotateY(${selected ? 30 : 88.8}deg)`,
+          transition: `transform ${TRANSITION}`,
         }}
-        aria-hidden
-      />
-
-      {/* Delete button — only in edit mode */}
-      {!readOnly && onDelete && (
-        <button
-          onClick={handleDelete}
-          title={confirmDelete ? "Click again to confirm" : "Remove book"}
-          className={`delete-btn absolute bottom-1 left-1/2 -translate-x-1/2 ${confirmDelete ? "confirm" : ""}`}
-          style={{
-            writingMode: "horizontal-tb",
-            zIndex: 10,
-            padding: "4px",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-          }}
-          aria-label={`Delete book: ${book.title}`}
-        >
-          {confirmDelete ? (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(220,80,80,0.85)" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          )}
-        </button>
-      )}
+      >
+        <BookCover book={book} />
+        <span className="cover-crease" aria-hidden />
+        <span className="paper" style={{ opacity: GRAIN_OPACITY }} aria-hidden />
+      </div>
     </div>
   );
 }
