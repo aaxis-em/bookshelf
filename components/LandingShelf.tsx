@@ -4,18 +4,22 @@ import { useState } from "react";
 import BookCard from "./BookCard";
 import type { Book } from "@/lib/books";
 
-const PLACEHOLDER_BOOKS: Book[] = [
-  { title: "The Black Lake", color: "#8B2500", size: "medium" },
-  { title: "Rusty Mirrors", color: "#2F4F4F", size: "small" },
-  { title: "Fog & Iron", color: "#4A3728", size: "large" },
-  { title: "Still Water", color: "#1B3A4B", size: "medium" },
-  { title: "The Last Room", color: "#6B3A5D", size: "medium" },
-  { title: "Ash & Memory", color: "#3E5641", size: "small" },
-  { title: "Hollow Keys", color: "#5C3317", size: "large" },
-  { title: "The Crow", color: "#2C3E50", size: "small" },
-  { title: "Undone", color: "#6B4226", size: "medium" },
-  { title: "Candle No. 9", color: "#8B6914", size: "large" },
-  { title: "Glass Heart", color: "#4A4063", size: "medium" },
+const cover = (id: number) => `https://covers.openlibrary.org/b/id/${id}-M.jpg`;
+
+// Spine colors hand-picked from each cover's palette
+const FEATURED_BOOKS: Book[] = [
+  { title: "The Hobbit", author: "J.R.R. Tolkien", coverUrl: cover(15223072), color: "#d27a14", size: "medium" },
+  { title: "The Great Gatsby", author: "F. Scott Fitzgerald", coverUrl: cover(14635758), color: "#035174", size: "small" },
+  { title: "Sapiens", author: "Yuval Noah Harari", coverUrl: cover(15247651), color: "#f0e8dc", size: "large" },
+  { title: "Neuromancer", author: "William Gibson", coverUrl: cover(13838027), color: "#603ca0", size: "small" },
+  { title: "Dune", author: "Frank Herbert", coverUrl: cover(9705237), color: "#8a6541", size: "large" },
+  { title: "1984", author: "George Orwell", coverUrl: cover(12628788), color: "#920006", size: "medium" },
+  { title: "Kafka on the Shore", author: "Haruki Murakami", coverUrl: cover(11522102), color: "#2c313a", size: "large" },
+  { title: "Brave New World", author: "Aldous Huxley", coverUrl: cover(12675058), color: "#69cdea", size: "small" },
+  { title: "Meditations", author: "Marcus Aurelius", coverUrl: cover(15256763), color: "#1f2123", size: "small" },
+  { title: "Thinking, Fast and Slow", author: "Daniel Kahneman", coverUrl: cover(15129456), color: "#cdbfb3", size: "large" },
+  { title: "The Midnight Library", author: "Matt Haig", coverUrl: cover(15164860), color: "#19233c", size: "medium" },
+  { title: "Project Hail Mary", author: "Andy Weir", coverUrl: cover(15208263), color: "#b08d57", size: "medium" },
 ].map((book, i) => ({ ...book, id: `demo-${i}`, description: "", createdAt: "2026-01-01T00:00:00.000Z" }));
 
 export default function LandingShelf() {
@@ -26,7 +30,7 @@ export default function LandingShelf() {
       {/* w-max + mx-auto centers the row, yet lets it scroll once a book opens past the edge */}
       <div className="no-scrollbar overflow-x-auto">
         <div className="mx-auto flex w-max items-end gap-3 px-3 pt-6">
-          {PLACEHOLDER_BOOKS.map((book) => (
+          {FEATURED_BOOKS.map((book) => (
             <BookCard
               key={book.id}
               book={book}
