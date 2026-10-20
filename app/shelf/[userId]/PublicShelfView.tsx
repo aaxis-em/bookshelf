@@ -5,7 +5,8 @@ import BookDetails from "@/components/BookDetails";
 import ShelfRows from "@/components/ShelfRows";
 import SiteHeader from "@/components/SiteHeader";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Book, getStatus } from "@/lib/books";
+import ShelfSummary from "@/components/ShelfSummary";
+import type { Book } from "@/lib/books";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -24,7 +25,6 @@ export default function PublicShelfView({ userName, userImage, books }: Props) {
     : null;
 
   const readingBooks = books.filter((b) => b.status === "reading");
-  const completedBooks = books.filter((b) => b.status === "completed");
 
   return (
     <>
@@ -32,46 +32,38 @@ export default function PublicShelfView({ userName, userImage, books }: Props) {
         <ThemeToggle />
       </SiteHeader>
 
-      <main className="mx-auto max-w-3xl px-4 pb-40 pt-24">
+      <main className="mx-auto max-w-3xl px-5 pb-24 pt-10">
         {/* Profile header */}
-        <header className="mb-10 flex animate-fade-in items-center gap-4">
-          {userImage && (
-            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-border">
-              <Image src={userImage} alt={userName} fill className="object-cover" sizes="48px" />
-            </div>
-          )}
-          <div>
-            <h1 className="text-3xl font-bold">{firstName}&apos;s Shelf</h1>
-            <p className="mt-1 text-sm text-muted">
-              {books.length} {books.length === 1 ? "book" : "books"}
-              {readingBooks.length > 0 && <> • {readingBooks.length} reading</>}
-              {completedBooks.length > 0 && <> • {completedBooks.length} completed</>}
-            </p>
+        <header className="mb-8 animate-fade-in">
+          <div className="flex items-center gap-4">
+            {userImage && (
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
+                <Image src={userImage} alt={userName} fill className="object-cover" sizes="48px" />
+              </div>
+            )}
+            <h1 className="type-title">{firstName}&rsquo;s Shelf</h1>
+          </div>
+          <div className="mt-3">
+            <ShelfSummary books={books} />
           </div>
         </header>
 
-        <div className="flex flex-col gap-12">
+        <div className="flex flex-col gap-14">
           {/* Currently reading */}
           {readingBooks.length > 0 && (
             <section className="animate-fade-in" style={{ animationDelay: "0.1s", animationFillMode: "both" }}>
-              <h2 className="flex items-center gap-2 text-lg font-bold">
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ background: getStatus("reading")?.dot, animation: "pulse 2s ease-in-out infinite" }}
-                />
-                Currently reading
-              </h2>
+              <h2 className="type-headline">Reading Now</h2>
               <ShelfRows books={readingBooks} selectedBookId={selectedBookId} onSelect={setSelectedBookId} />
             </section>
           )}
 
           {/* All books */}
           <section className="animate-fade-in" style={{ animationDelay: "0.2s", animationFillMode: "both" }}>
-            <h2 className="text-lg font-bold">All books</h2>
+            <h2 className="type-headline">All Books</h2>
             {books.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-16 text-center">
-                <p className="text-lg">This shelf is empty.</p>
-                <p className="text-sm text-muted">No books have been added yet.</p>
+              <div className="py-16">
+                <p className="type-headline">No Books Yet</p>
+                <p className="mt-1 text-muted">Check back once {firstName} has added a book or two.</p>
               </div>
             ) : (
               <ShelfRows books={books} selectedBookId={selectedBookId} onSelect={setSelectedBookId} />
@@ -85,10 +77,10 @@ export default function PublicShelfView({ userName, userImage, books }: Props) {
         </div>
 
         {/* Footer */}
-        <footer className="mt-24 flex flex-col items-center gap-2 border-t border-border pt-8 text-center text-sm">
-          <p className="text-subtle">Built with The Shelf</p>
-          <Link href="/" className="text-link hover:underline">
-            Create your own shelf →
+        <footer className="meta mt-24 flex flex-wrap justify-between gap-2 border-t border-border pt-4">
+          <span>Covers courtesy of Open Library.</span>
+          <Link href="/" className="link">
+            Make your own shelf ›
           </Link>
         </footer>
       </main>

@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
-import { DM_Sans, Lora } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/providers/SessionProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
-
-const lora = Lora({ subsets: ["latin"], display: "swap", variable: "--font-lora" });
-const dmSans = DM_Sans({ subsets: ["latin"], display: "swap", variable: "--font-dm-sans" });
 
 const title = "The Shelf — Your Personal Bookshelf";
 const description =
@@ -74,7 +70,7 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang="en" data-theme="light" className={`${lora.variable} ${dmSans.variable}`}>
+    <html lang="en" data-theme="light">
       <head>
         <script
           type="application/ld+json"

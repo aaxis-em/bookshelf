@@ -27,7 +27,6 @@ export default function LandingShelf() {
 
   return (
     <div className="w-full">
-      {/* w-max + mx-auto centers the row, yet lets it scroll once a book opens past the edge */}
       <div className="no-scrollbar overflow-x-auto">
         <div className="mx-auto flex w-max items-end gap-3 px-3 pt-6">
           {FEATURED_BOOKS.map((book) => (
@@ -40,8 +39,7 @@ export default function LandingShelf() {
           ))}
         </div>
       </div>
-      <div className="h-px bg-border" aria-hidden />
-      <p className="mt-3 text-center text-xs text-subtle">Click a spine to open it</p>
+      <div className="h-[2px] rounded-full bg-shelf" aria-hidden />
     </div>
   );
 }

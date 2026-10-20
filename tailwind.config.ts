@@ -14,14 +14,18 @@ const config: Config = {
         fg: "var(--fg)",
         muted: "var(--muted)",
         subtle: "var(--subtle)",
-        nav: "var(--nav)",
+        nav: "var(--muted)",
         border: "var(--border)",
         hover: "var(--hover)",
-        link: "var(--link)",
+        link: "var(--accent)",
+        accent: "var(--accent)",
+        card: "var(--card)",
+        shelf: "var(--shelf)",
+        thumb: "var(--thumb)",
+        danger: "var(--danger)",
       },
       fontFamily: {
-        serif: ["var(--font-lora)", "Georgia", "serif"],
-        sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', '"Segoe UI"', "Roboto", '"Helvetica Neue"', "Arial", "sans-serif"],
       },
       keyframes: {
         fadeIn: {

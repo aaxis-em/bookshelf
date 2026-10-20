@@ -31,17 +31,17 @@ export default function NavActions() {
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4">
       <ThemeToggle />
 
-      <div className="h-4 w-px bg-border" aria-hidden />
+      
 
       {/* Ambient sound toggle */}
       <button
         id="ambient-sound-btn"
         onClick={toggleSound}
         title={soundOn ? "Silence" : "Play ambience"}
-        className="text-nav transition-colors duration-150 hover:text-fg"
+        className="pressable text-muted hover:text-fg"
         aria-label={soundOn ? "Turn off ambient sound" : "Turn on ambient sound"}
       >
         {soundOn ? (
@@ -59,14 +59,14 @@ export default function NavActions() {
         )}
       </button>
 
-      <div className="h-4 w-px bg-border" aria-hidden />
+      
 
       <button
         id="sign-out-btn"
         onClick={() => signOut({ callbackUrl: "/" })}
-        className="text-sm text-nav transition-colors duration-150 hover:text-fg"
+        className="text-muted transition-colors hover:text-fg"
       >
-        Sign out
+        Sign Out
       </button>
     </div>
   );

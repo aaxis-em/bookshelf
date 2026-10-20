@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import CoverPicker from "./CoverPicker";
-import { COLOR_OPTIONS, SIZE_OPTIONS, STATUS_OPTIONS, getBookDimensions } from "@/lib/books";
+import Segmented from "./Segmented";
+import { COLOR_OPTIONS, SIZE_OPTIONS, STATUS_OPTIONS } from "@/lib/books";
 import type { BookMatch } from "@/lib/openLibrary";
 
 export interface NewBook {
@@ -46,7 +47,7 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) {
-      setError("Both fields are required.");
+      setError("Add a title and a few notes first.");
       return;
     }
     setLoading(true);
@@ -72,76 +73,78 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
     if (e.target === backdropRef.current) onClose();
   };
 
+  const canSubmit = title.trim() && description.trim() && !loading;
+
   return (
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
-      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center"
+      className="modal-backdrop fixed inset-0 z-50 flex items-end justify-center sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-label="Add a book"
     >
-      <div className="relative mx-4 max-h-[90vh] w-full max-w-md animate-slide-up overflow-y-auto rounded-lg border border-border bg-bg p-6 shadow-lg sm:p-8">
-        {/* Close button */}
-        <button
-          id="close-modal-btn"
-          onClick={onClose}
-          className="absolute right-4 top-4 text-nav transition-colors hover:text-fg"
-          aria-label="Close modal"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+      <form
+        onSubmit={handleSubmit}
+        className="sheet-enter relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[22px] bg-card shadow-2xl sm:mx-4 sm:rounded-[22px]"
+      >
+        {/* Sheet nav bar: Cancel · title · Add */}
+        <div className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-border px-4 py-3">
+          <button type="button" id="close-modal-btn" onClick={onClose} className="pressable justify-self-start text-[17px] text-accent">
+            Cancel
+          </button>
+          <h2 className="text-[17px] font-semibold tracking-[-0.02em]">New Book</h2>
+          <button
+            type="submit"
+            id="submit-book-btn"
+            disabled={!canSubmit}
+            className="pressable justify-self-end text-[17px] font-semibold text-accent disabled:text-subtle"
+          >
+            {loading ? "Adding…" : "Add"}
+          </button>
+        </div>
 
-        <h2 className="mb-6 text-2xl font-bold">Add a book</h2>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Title field */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="book-title-input" className="text-sm font-semibold">
-              Title
-            </label>
-            <input
-              id="book-title-input"
-              ref={titleRef}
-              type="text"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                setPickedCover(null);
-              }}
-              placeholder="The name of the book..."
-              maxLength={120}
-              className="input w-full px-3 py-2"
-              disabled={loading}
-            />
+        <div className="flex flex-col gap-6 overflow-y-auto px-4 pb-6 pt-5 sm:px-6">
+          {/* Title + author, grouped */}
+          <div className="group-list">
+            <div className="group-row py-0">
+              <input
+                id="book-title-input"
+                ref={titleRef}
+                type="text"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setPickedCover(null);
+                }}
+                placeholder="Title"
+                aria-label="Title"
+                maxLength={120}
+                className="w-full bg-transparent py-3 outline-none placeholder:text-subtle"
+                disabled={loading}
+              />
+            </div>
+            <div className="group-row py-0">
+              <input
+                id="book-author-input"
+                type="text"
+                value={author}
+                onChange={(e) => {
+                  setAuthor(e.target.value);
+                  setPickedCover(null);
+                }}
+                placeholder="Author (optional)"
+                aria-label="Author"
+                maxLength={120}
+                className="w-full bg-transparent py-3 outline-none placeholder:text-subtle"
+                disabled={loading}
+              />
+            </div>
           </div>
 
-          {/* Author field */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="book-author-input" className="text-sm font-semibold">
-              Author <span className="font-normal text-subtle">(optional)</span>
-            </label>
-            <input
-              id="book-author-input"
-              type="text"
-              value={author}
-              onChange={(e) => {
-                setAuthor(e.target.value);
-                setPickedCover(null);
-              }}
-              placeholder="Helps find the right cover"
-              maxLength={120}
-              className="input w-full px-3 py-2"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Cover picker */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold">Cover</span>
+          {/* Cover */}
+          <div>
+            <p className="meta mb-2 px-1 uppercase">Cover</p>
             <CoverPicker
               title={title}
               author={author}
@@ -151,131 +154,65 @@ export default function AddBookModal({ onAdd, onClose }: Props) {
             />
           </div>
 
-          {/* Description field */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="book-description-input" className="text-sm font-semibold">
-              Your notes
-            </label>
+          {/* Notes */}
+          <div>
+            <p className="meta mb-2 px-1 uppercase">Notes</p>
             <textarea
               id="book-description-input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What does this book mean to you..."
-              rows={3}
+              placeholder="What do you want to remember about it?"
+              rows={4}
               maxLength={600}
-              className="input w-full resize-none px-3 py-2 leading-relaxed"
+              className="input w-full resize-none leading-[1.47]"
               disabled={loading}
             />
-            <span className="self-end text-xs text-subtle">{description.length}/600</span>
+            <p className="meta mt-1 px-1 text-right">{description.length}/600</p>
           </div>
 
-          {/* Reading status */}
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold">Reading status</span>
-            <div className="flex flex-wrap items-center gap-2">
-              {STATUS_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setSelectedStatus(opt.value)}
-                  className={`btn-outline px-2.5 py-1 text-xs ${selectedStatus === opt.value ? "border-subtle bg-hover" : "text-muted"}`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: opt.dot }} />
-                  {opt.label}
-                </button>
-              ))}
+          {/* Shelf appearance */}
+          <div className="group-list text-[15px]">
+            <div className="group-row">
+              <span>Status</span>
+              <Segmented label="Reading status" options={STATUS_OPTIONS} value={selectedStatus} onChange={setSelectedStatus} />
             </div>
-          </div>
-
-          {/* Color picker */}
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold">Spine color</span>
-            <div className="flex flex-wrap gap-2">
-              {COLOR_OPTIONS.map((color) => (
-                <button
-                  key={color.hex}
-                  type="button"
-                  title={color.name}
-                  className="h-6 w-6 rounded-full transition-transform hover:scale-110"
-                  style={{
-                    background: color.hex,
-                    outline: selectedColor === color.hex ? "2px solid var(--fg)" : "none",
-                    outlineOffset: "2px",
-                  }}
-                  onClick={() => setSelectedColor(color.hex)}
-                  aria-label={`Select ${color.name} color`}
-                  aria-pressed={selectedColor === color.hex}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Book size — mini spines at 1/4 scale */}
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold">Book size</span>
-            <div className="flex items-end gap-4">
-              {SIZE_OPTIONS.map((opt) => {
-                const { spine, height } = getBookDimensions(opt.value);
-                const active = selectedSize === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setSelectedSize(opt.value)}
-                    className="flex flex-col items-center gap-1.5"
-                    title={opt.desc}
-                    aria-pressed={active}
-                  >
-                    <span
-                      className="block transition-opacity"
+            <div className="group-row">
+              <span>Spine Color</span>
+              <div className="flex flex-wrap gap-2">
+                {COLOR_OPTIONS.map((color) => {
+                  const active = selectedColor === color.hex;
+                  return (
+                    <button
+                      key={color.hex}
+                      type="button"
+                      title={color.name}
+                      className="pressable h-5 w-5 rounded-full"
                       style={{
-                        width: spine / 2,
-                        height: height / 4,
-                        background: selectedColor,
-                        opacity: active ? 1 : 0.4,
-                        outline: active ? "2px solid var(--fg)" : "none",
-                        outlineOffset: "2px",
+                        background: color.hex,
+                        boxShadow: active ? "0 0 0 2px var(--hover), 0 0 0 4px var(--accent)" : "inset 0 0 0 0.5px rgba(0,0,0,0.15)",
                       }}
+                      onClick={() => setSelectedColor(color.hex)}
+                      aria-label={`Select ${color.name} color`}
+                      aria-pressed={active}
                     />
-                    <span className={`text-xs ${active ? "font-semibold text-fg" : "text-muted"}`}>{opt.desc}</span>
-                  </button>
-                );
-              })}
+                  );
+                })}
+              </div>
+            </div>
+            <div className="group-row">
+              <span>Size</span>
+              <Segmented
+                label="Book size"
+                options={SIZE_OPTIONS.map((o) => ({ value: o.value, label: o.desc }))}
+                value={selectedSize}
+                onChange={setSelectedSize}
+              />
             </div>
           </div>
 
-          {/* Error */}
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-
-          {/* Submit */}
-          <div className="flex items-center gap-2 pt-2">
-            <button
-              type="submit"
-              id="submit-book-btn"
-              disabled={loading}
-              className="flex-1 rounded-md bg-fg px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? (
-                <span className="inline-flex items-center gap-2">
-                  <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
-                  Adding...
-                </span>
-              ) : (
-                "Add to shelf"
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-muted transition-colors hover:text-fg"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
+          {error && <p className="px-1 text-[15px] text-danger">{error}</p>}
+        </div>
+      </form>
     </div>
   );
 }

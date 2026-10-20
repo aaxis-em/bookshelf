@@ -44,17 +44,12 @@ export default async function ShelfPage() {
     <>
       <Navbar />
 
-      <main className="mx-auto max-w-3xl px-4 pb-40 pt-24">
-        {/* Page header */}
-        <header className="mb-10 animate-fade-in">
-          <h1 className="text-3xl font-bold">
-            {session.user.name?.split(" ")[0]}&apos;s Shelf
-          </h1>
-          <p className="mt-1 text-muted">Every book holds a memory.</p>
-        </header>
+      <main className="mx-auto max-w-3xl px-5 pb-40 pt-10">
+        <h1 className="type-title mb-2 animate-fade-in">
+          {session.user.name?.split(" ")[0]}&rsquo;s Shelf
+        </h1>
 
-        {/* Shelf */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.2s", animationFillMode: "both" }}>
+        <div className="animate-fade-in" style={{ animationDelay: "0.15s", animationFillMode: "both" }}>
           <BookShelf initialBooks={books} userId={session.user.id} />
         </div>
       </main>

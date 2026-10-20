@@ -7,9 +7,9 @@ export default function SignInButton() {
     <button
       id="sign-in-google-btn"
       onClick={() => signIn("google", { callbackUrl: "/shelf" })}
-      className="btn-outline px-5 py-2 text-base"
+      className="btn"
     >
-      Sign in to start your shelf
+      Start Your Shelf
     </button>
   );
 }

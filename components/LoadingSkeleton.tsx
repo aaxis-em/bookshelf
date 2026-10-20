@@ -11,7 +11,7 @@ export default function LoadingSkeleton() {
           return <div key={i} className="skeleton shrink-0" style={{ width: spine, height }} />;
         })}
       </div>
-      <div className="h-px bg-border" />
+      <div className="h-[2px] rounded-full bg-shelf" />
     </div>
   );
 }
