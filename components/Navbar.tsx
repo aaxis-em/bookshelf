@@ -13,7 +13,7 @@ export default async function Navbar() {
         <>
           <div className="flex items-center gap-2">
             {session.user.image && (
-              <div className="relative h-7 w-7 overflow-hidden rounded-full border border-border">
+              <div className="relative h-6 w-6 overflow-hidden rounded-full">
                 <Image
                   src={session.user.image}
                   alt={session.user.name ?? "Avatar"}
@@ -23,7 +23,7 @@ export default async function Navbar() {
                 />
               </div>
             )}
-            <span className="hidden text-sm text-muted sm:block">
+            <span className="hidden text-muted sm:block">
               {session.user.name?.split(" ")[0]}
             </span>
           </div>

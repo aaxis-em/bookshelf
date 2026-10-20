@@ -2,65 +2,157 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Light Theme (default) ─────────────────────────────────── */
+/* ─── Light: Apple-style neutral grays, one blue accent ────────── */
 :root,
 [data-theme="light"] {
-  --bg: #ffffff;
-  --fg: #1a202c;
-  --muted: #666666;
-  --subtle: #999999;
-  --nav: #718096;
-  --border: #e2e8f0;
-  --hover: #edf2f7;
-  --link: #3182ce;
-  --backdrop: rgba(0, 0, 0, 0.4);
+  --bg: #fbfbfd;
+  --card: #ffffff;
+  --fg: #1d1d1f;
+  --muted: #6e6e73;
+  --subtle: #86868b;
+  --border: rgba(0, 0, 0, 0.1);
+  --hover: #f0f0f3;
+  --thumb: #ffffff;
+  --shelf: #d2d2d7;
+  --accent: #0071e3;
+  --danger: #e30000;
+  --material: rgba(251, 251, 253, 0.8);
+  --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.07);
+  --backdrop: rgba(0, 0, 0, 0.32);
   color-scheme: light;
 }
 
-/* ─── Dark Theme ────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg: #111111;
-  --fg: #e2e8f0;
-  --muted: #a0aec0;
-  --subtle: #718096;
-  --nav: #718096;
-  --border: #2d3748;
-  --hover: #1a202c;
-  --link: #63b3ed;
+  --bg: #000000;
+  --card: #1c1c1e;
+  --fg: #f5f5f7;
+  --muted: #a1a1a6;
+  --subtle: #86868b;
+  --border: rgba(255, 255, 255, 0.12);
+  --hover: #2c2c2e;
+  --thumb: #636366;
+  --shelf: #3a3a3c;
+  --accent: #2997ff;
+  --danger: #ff453a;
+  --material: rgba(22, 22, 23, 0.8);
+  --card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
   --backdrop: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
 
-/* ─── Base ──────────────────────────────────────────────────── */
+/* Critically damped spring (damping 1.0, response 0.4s) sampled for CSS */
+:root {
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring-duration: 600ms;
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(0, 0.06, 0.186, 0.329, 0.466, 0.584, 0.682, 0.76, 0.821, 0.868, 0.903, 0.929, 0.949, 0.963, 0.973, 0.981, 0.986, 0.99, 0.993, 0.995, 0.997, 0.998, 0.998, 0.999, 1);
+  }
+}
+
+/* ─── Base: system font, size-specific tracking ──────────────── */
 body {
   background-color: var(--bg);
   color: var(--fg);
-  font-family: var(--font-lora), Georgia, serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.01em;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  /* Ease light/dark switches instead of a brightness jump */
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 ::selection {
-  background: var(--hover);
-  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 @layer components {
-  /* Chakra-style outline button */
-  .btn-outline {
-    @apply inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm text-fg transition-colors duration-150 hover:bg-hover disabled:opacity-50;
+  /* Type scale: hierarchy from size + weight + leading together */
+  .type-display {
+    font-size: clamp(2.5rem, 6vw, 3.5rem);
+    line-height: 1.07;
+    letter-spacing: -0.028em;
+    font-weight: 600;
+  }
+  .type-title {
+    font-size: 1.75rem;
+    line-height: 1.14;
+    letter-spacing: -0.021em;
+    font-weight: 600;
+  }
+  .type-headline {
+    font-size: 1.3125rem;
+    line-height: 1.19;
+    letter-spacing: -0.012em;
+    font-weight: 600;
+  }
+  .type-callout {
+    font-size: 0.9375rem;
+    line-height: 1.33;
+    letter-spacing: -0.006em;
+  }
+  .meta {
+    font-size: 0.75rem;
+    line-height: 1.33;
+    letter-spacing: 0.005em;
+    color: var(--subtle);
+  }
+
+  /* Feedback on press, not on release */
+  .pressable {
+    transition: transform 100ms ease-out, opacity 150ms ease, background-color 150ms ease;
+  }
+  .pressable:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .btn {
+    @apply pressable inline-flex items-center justify-center gap-1.5 rounded-full bg-accent px-5 py-2 text-[15px] font-medium tracking-[-0.006em] text-white hover:opacity-90 disabled:opacity-40;
+  }
+  .btn-secondary {
+    @apply pressable inline-flex items-center justify-center gap-1.5 rounded-full bg-hover px-4 py-2 text-[15px] font-medium tracking-[-0.006em] text-fg disabled:opacity-40;
+  }
+  .link {
+    @apply text-accent hover:underline;
   }
 
   .input {
-    @apply rounded-md border border-border bg-bg text-fg outline-none transition-colors duration-150;
+    @apply rounded-[10px] border-0 bg-hover px-3 py-2 text-fg outline-none transition-shadow;
   }
   .input:focus {
-    border-color: var(--subtle);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent);
   }
   .input::placeholder {
     color: var(--subtle);
+  }
+
+  .card {
+    @apply rounded-[18px] bg-card;
+    box-shadow: var(--card-shadow);
+  }
+
+  /* Inset grouped list, as in Settings */
+  .group-list {
+    @apply overflow-hidden rounded-[12px] bg-hover;
+  }
+  .group-row {
+    @apply flex min-h-[44px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2;
+  }
+  .group-row + .group-row {
+    box-shadow: inset 0 1px 0 var(--border);
+  }
+
+  /* Translucent chrome; content scrolls underneath */
+  .material {
+    background: var(--material);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
 
   /* Paper grain baked into a tile: fractal noise lit from the top-left */
@@ -116,6 +208,10 @@ body {
   .book-details-panel {
     animation: descSlideIn 0.35s ease forwards;
   }
+
+  .sheet-enter {
+    animation: sheetIn var(--spring-duration) var(--ease-spring) both;
+  }
 }
 
 @keyframes shimmerAnim {
@@ -136,4 +232,25 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.5; }
+}
+
+@keyframes sheetIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .material { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+/* Reduced motion: cross-fade instead of swinging, sliding or scaling */
+@media (prefers-reduced-motion: reduce) {
+  .book, .book * { transition-duration: 0.01ms !important; }
+  .sheet-enter { animation: fadeOnly 200ms ease both; }
+  .book-details-panel, .animate-fade-in, .animate-slide-up { animation: fadeOnly 200ms ease both !important; }
+  .pressable:active:not(:disabled) { transform: none; }
+}
+@keyframes fadeOnly {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

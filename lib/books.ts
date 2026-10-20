@@ -32,9 +32,9 @@ export const COLOR_OPTIONS = [
 export const DEFAULT_COLOR = COLOR_OPTIONS[0].hex;
 
 export const STATUS_OPTIONS = [
-  { value: "", label: "No status", dot: "var(--subtle)" },
-  { value: "reading", label: "Currently reading", dot: "#22c55e" },
-  { value: "completed", label: "Completed", dot: "#eab308" },
+  { value: "", label: "None", dot: "var(--subtle)" },
+  { value: "reading", label: "Reading", dot: "#34c759" },
+  { value: "completed", label: "Finished", dot: "#ff9f0a" },
 ];
 
 export function getStatus(status?: string | null) {

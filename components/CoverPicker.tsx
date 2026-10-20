@@ -72,8 +72,8 @@ export default function CoverPicker({ title, author = "", value, onChange, color
               title={[m.title, m.author, m.year].filter(Boolean).join(" · ")}
               aria-label={`Use cover of ${m.title}${m.author ? ` by ${m.author}` : ""}`}
               aria-pressed={active}
-              className="h-24 w-16 shrink-0 overflow-hidden border border-border bg-hover"
-              style={{ outline: active ? "2px solid var(--fg)" : "none", outlineOffset: "2px" }}
+              className="pressable h-24 w-16 shrink-0 overflow-hidden rounded-[5px] bg-hover shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+              style={{ outline: active ? "2.5px solid var(--accent)" : "none", outlineOffset: "2px" }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={m.coverUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
@@ -86,19 +86,19 @@ export default function CoverPicker({ title, author = "", value, onChange, color
             onClick={() => onChange(null)}
             aria-label="Use no cover"
             aria-pressed={selectedUrl === null}
-            className="flex h-24 w-16 shrink-0 items-center justify-center border border-border px-1 text-center text-xs leading-tight"
+            className="pressable flex h-24 w-16 shrink-0 items-center justify-center rounded-[5px] px-1 text-center text-[11px] font-medium leading-tight"
             style={{
               backgroundColor: color,
               color: getContrastColor(color),
-              outline: selectedUrl === null ? "2px solid var(--fg)" : "none",
+              outline: selectedUrl === null ? "2.5px solid var(--accent)" : "none",
               outlineOffset: "2px",
             }}
           >
-            No cover
+            No Cover
           </button>
         )}
       </div>
-      <p className="truncate text-xs text-subtle">{status}</p>
+      <p className="meta truncate px-1">{status}</p>
     </div>
   );
 }

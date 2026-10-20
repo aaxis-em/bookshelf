@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Book, DEFAULT_COLOR, getContrastColor } from "@/lib/books";
 
 interface Props {
-  book: Pick<Book, "title" | "color" | "coverUrl">;
+  book: Pick<Book, "title" | "color" | "coverUrl" | "author">;
 }
 
 // Fills its container with the Open Library cover, or a generated cover
@@ -36,9 +36,10 @@ export default function BookCover({ book }: Props) {
       style={{ backgroundColor: color, color: textColor }}
     >
       <div className="absolute inset-2.5 border opacity-30" style={{ borderColor: textColor }} aria-hidden />
-      <span className="relative line-clamp-6 select-none text-center font-serif text-sm font-bold leading-snug">
-        {book.title}
-      </span>
+      <div className="relative flex select-none flex-col items-center gap-2 text-center">
+        <span className="line-clamp-5 text-[15px] font-semibold leading-tight tracking-[-0.012em]">{book.title}</span>
+        {book.author && <span className="text-[10px] font-medium tracking-[0.01em] opacity-75">{book.author}</span>}
+      </div>
     </div>
   );
 }

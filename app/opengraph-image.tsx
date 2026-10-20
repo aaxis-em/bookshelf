@@ -16,7 +16,7 @@ export default function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#ffffff",
+          background: "#fbfbfd",
           position: "relative",
         }}
       >
@@ -28,30 +28,30 @@ export default function Image() {
             left: 40,
             right: 40,
             bottom: 40,
-            border: "1px solid #e2e8f0",
+            border: "1px solid #d2d2d7",
           }}
         />
 
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 64, height: 1, background: "#666666" }} />
+          <div style={{ width: 64, height: 1, background: "#6e6e73" }} />
           <span
             style={{
               fontSize: 22,
               letterSpacing: 6,
               textTransform: "uppercase",
-              color: "#666666",
+              color: "#6e6e73",
             }}
           >
             Est. MMXXVI
           </span>
-          <div style={{ width: 64, height: 1, background: "#666666" }} />
+          <div style={{ width: 64, height: 1, background: "#6e6e73" }} />
         </div>
 
         <div
           style={{
             display: "flex",
             fontSize: 112,
-            color: "#1a202c",
+            color: "#1d1d1f",
             marginTop: 28,
             letterSpacing: -2,
           }}
@@ -63,7 +63,7 @@ export default function Image() {
           style={{
             display: "flex",
             fontSize: 32,
-            color: "#666666",
+            color: "#6e6e73",
             marginTop: 16,
           }}
         >

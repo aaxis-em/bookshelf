@@ -10,7 +10,7 @@ export default function ThemeToggle() {
       id="theme-toggle-btn"
       onClick={toggleTheme}
       title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className="text-nav transition-colors duration-150 hover:text-fg"
+      className="pressable text-muted hover:text-fg"
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
     >
       {theme === "dark" ? (

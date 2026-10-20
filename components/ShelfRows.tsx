@@ -20,6 +20,7 @@ export default function ShelfRows({ books, selectedBookId, onSelect, removingIds
     <div className="flex flex-col gap-10">
       {rows.map((row, rowIdx) => (
         <div key={rowIdx}>
+          {rows.length > 1 && <p className="meta">Shelf {rowIdx + 1}</p>}
           <div className="no-scrollbar flex items-end gap-3 overflow-x-auto pr-3 pt-6">
             {row.map((book) => (
               <BookCard
@@ -31,7 +32,7 @@ export default function ShelfRows({ books, selectedBookId, onSelect, removingIds
               />
             ))}
           </div>
-          <div className="h-px bg-border" aria-hidden />
+          <div className="h-[2px] rounded-full bg-shelf" aria-hidden />
         </div>
       ))}
     </div>

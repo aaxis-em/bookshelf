@@ -1,0 +1,18 @@
+// The favicon's three books, inline so it scales with the wordmark
+export default function Logo({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
+      <g transform="rotate(-16 24 31)">
+        <rect x="24" y="8" width="7.5" height="23" rx=".6" fill="#6c9bd2" />
+        <rect x="29.7" y="8" width="1.8" height="23" fill="#000" opacity=".25" />
+        <rect x="24" y="11" width="7.5" height="1.3" fill="#fff" opacity=".6" />
+      </g>
+      <rect x="1" y="8" width="8" height="23" rx=".6" fill="#e4572e" />
+      <rect x="7.2" y="8" width="1.8" height="23" fill="#000" opacity=".25" />
+      <rect x="1" y="11" width="8" height="1.3" fill="#fff" opacity=".6" />
+      <rect x="10" y="3" width="8" height="28" rx=".6" fill="#f2b134" />
+      <rect x="16.2" y="3" width="1.8" height="28" fill="#000" opacity=".2" />
+      <rect x="10" y="6" width="8" height="1.3" fill="#fff" opacity=".7" />
+    </svg>
+  );
+}

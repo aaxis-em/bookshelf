@@ -8,7 +8,7 @@ import { Book, DEFAULT_COLOR, getBookDimensions, getContrastColor, getStatus } f
 // so the darker spine palette keeps its hue instead of crushing to black.
 const FACE_FILTER = "brightness(0.95) contrast(1.25)";
 const GRAIN_OPACITY = 0.3;
-const TRANSITION = "500ms ease";
+const TRANSITION = "var(--spring-duration) var(--ease-spring)";
 
 interface Props {
   book: Book;
@@ -74,7 +74,7 @@ export default function BookCard({ book, selected = false, onSelect, removing }:
       aria-expanded={selected}
       aria-label={label}
       title={label}
-      className={`flex shrink-0 cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-subtle ${removing ? "book-removing" : ""}`}
+      className={`book flex shrink-0 cursor-pointer rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-accent ${removing ? "book-removing" : ""}`}
       style={{
         width: selected ? spine + cover : spine,
         height,
@@ -101,7 +101,7 @@ export default function BookCard({ book, selected = false, onSelect, removing }:
         }}
       >
         <h2
-          className="mt-3 select-none overflow-hidden text-ellipsis whitespace-nowrap font-sans text-xs font-bold"
+          className="mt-3 select-none overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold tracking-[0.01em]"
           style={{ writingMode: "vertical-rl", maxHeight: height - (status ? 40 : 24) }}
         >
           {book.title}
